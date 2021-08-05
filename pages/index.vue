@@ -1,10 +1,11 @@
 <template>
-  <b-container>
-
-    Enter Your Address:
-    <b-input type="text" v-model="walletAddress"></b-input>
-    <b-button v-on:click="getBalance()">Check</b-button>
-    <span>{{ balance }}</span>
+  <b-container class="p-3">
+    <b-form>
+      Your Address:
+      <b-input type="text" v-model="walletAddress"></b-input>
+      <b-button v-on:click="getBalance()">Check</b-button>
+    </b-form>
+    <h3>{{ balance }}HACK</h3>
   </b-container>
 </template>
 
@@ -13,58 +14,26 @@ import Vue from 'vue';
 import Web3 from "web3";
 import Fortmatic from "fortmatic";
 
-const fm = new Fortmatic('pk_test_872A749ADE8F3958', 'ropsten');
-let web3 = new Web3(fm.getProvider());
+import ABI from "~/assets/abi.json"
+import Settings from "~/assets/settings.json"
+import Private from "~/assets/private.json"
 
-const ABI = [
-  {
-    constant: true,
-    inputs: [
-      {
-        name: "_owner",
-        type: "address",
-      },
-    ],
-    name: "balanceOf",
-    outputs: [
-      {
-        name: "balance",
-        type: "uint256",
-      },
-    ],
-    payable: false,
-    stateMutability: "view",
-    type: "function",
-  },
-  {
-    "constant": true,
-    "inputs": [],
-    "name": "decimals",
-    "outputs":
-      [
-        {
-          "name": "",
-          "type": "uint8"
-        }
-      ],
-    "type": "function"
-  },
-];
+const fm = new Fortmatic(Private.fortmaticKey, Settings.network);
+let web3 = new Web3(fm.getProvider());
 
 export default Vue.extend({
   data() {
     return {
-      tokenAddress: "0x1fc5a5f5fef160cd9bf81653f4a139055d281ec7",
+      tokenAddress: Settings.tokenContractAddress,
       walletAddress: "",
-      contract: new web3.eth.Contract(ABI, this.tokenAddress),
+      contract: null,
       balance: 0,
     }
   },
-  mounted() {
+  async mounted() {
     this.contract = new web3.eth.Contract(ABI, this.tokenAddress);
-    web3.eth.getCoinbase().then((coinbase) => {
-      this.walletAddress = coinbase;
-    });
+    this.walletAddress = await web3.eth.getCoinbase();
+    this.getBalance();
   },
   methods: {
     getBalance: async function () {
