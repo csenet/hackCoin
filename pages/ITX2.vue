@@ -47,7 +47,21 @@ const itx = new ethers.providers.InfuraProvider(
 )
 
 const fm = new Fortmatic(Private.fortmaticKey, Settings.network);
-let web3 = new Web3(fm.getProvider());
+let web3;
+if (typeof window !== 'undefined' && typeof window.ethereum !== 'undefined') {
+  web3 = new Web3(window.ethereum)
+  window.ethereum.enable().catch(error => {
+    // User denied account access
+    console.log(error)
+  })
+} else if (typeof window !== 'undefined' && typeof window.web3 !== 'undefined') {
+  web3 = new Web3(window.web3.currentProvider)
+} else {
+  const httpEndpoint = 'http://127.0.0.1:7545'
+  web3 = new Web3(new Web3.providers.HttpProvider(httpEndpoint))
+}
+
+let tempA = {};
 
 const signer = new ethers.Wallet(Private.privateKey, itx);
 
@@ -70,7 +84,7 @@ export default Vue.extend({
   async created() {
     this.contract = new web3.eth.Contract(ABI, Settings.tokenContractAddress);
     this.nowStatus = "Walletとの接続をしています";
-    this.walletAddress = await web3.eth.getCoinbase();
+    this.walletAddress = (await web3.eth.getAccounts())[0];
     this.nowStatus = "Walletと接続しました";
     await this.getDeposit();
   },
@@ -134,14 +148,11 @@ export default Vue.extend({
       }
     },
     sendToken: async function (req, res, next) {
-
       console.log(this.amount);
       const sendAmount = parseFloat(this.amount);
-
       const payload = this.createPayload();
       const from = this.walletAddress;
-      console.log(from);
-      const params = [from, payload];
+      const params = [from, JSON.stringify(payload)];
       const method = 'eth_signTypedData_v4';
       web3.currentProvider.sendAsync({
         id: 3,
@@ -155,44 +166,23 @@ export default Vue.extend({
       });
     },
     sendWithITX: async function (result, payload) {
-      const userSignature = result.result;
-      console.log(userSignature)
-      const v = "0x" + userSignature.slice(130, 132);
-      const r = userSignature.slice(0, 66);
-      const s = "0x" + userSignature.slice(66, 130);
+      const sig = result.result;
+      // const v = "0x" + userSignature.slice(130, 132);
+      // const r = userSignature.slice(0, 66);
+      // const s = "0x" + userSignature.slice(66, 130);
+      const v = '0x' + sig.slice(130, 132);
+      const r =  sig.slice(0, 66);
+      const s = '0x' + sig.slice(66, 130);
       console.log("v:", v, "r:", r, "s:", s);
-      const iface = new ethers.utils.Interface(ABI);
-      const encodedData = iface.encodeFunctionData('transferWithAuthorization',
-        [this.walletAddress,
-          this.toAddress,
-          this.amount,
-          payload.message.validAfter,
-          payload.message.validBefore,
-          payload.message.nonce,
-          v, r, s])
 
-      console.log(encodedData)
-
-      console.log("Before Balance:" + await this.getBalance())
-
-      const tx = {
-        to: Settings.tokenContractAddress,
-        data: encodedData,
-        gas: '50000',
-        schedule: 'fast'
-      }
-
-      //TxにSignerが署名をする
-      const signature = await this.signRequest(tx)
-      console.log(signature)
-
-      const relayTransactionHash = await itx.send('relay_sendTransaction', [
-        tx,
-        signature
-      ])
-      this.nowStatus = relayTransactionHash.relayTransactionHash;
-      console.log(relayTransactionHash.relayTransactionHash)
-      const receipt = await this.waitTx(relayTransactionHash.relayTransactionHash)
+      await this.contract.methods.transferWithAuthorization(
+        this.walletAddress,
+        this.toAddress,
+        this.amount,
+        payload.message.validAfter,
+        payload.message.validBefore,
+        payload.message.nonce,
+        v, r, s).call();
     },
     signRequest: async function (tx) {
       const relayTransactionHash = ethers.utils.keccak256(

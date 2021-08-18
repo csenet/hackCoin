@@ -1,4 +1,5 @@
 {
   "network": "ropsten",
-  "tokenContractAddress": "0x1fc5a5f5fef160cd9bf81653f4a139055d281ec7"
+  "tokenContractAddress": "0xbCAa02272616b48f5D18e8A233196b0E26298782",
+  "ITXDepositContractAddress": "0x015C7C7A7D65bbdb117C573007219107BD7486f9"
 }
