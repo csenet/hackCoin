@@ -1,31 +1,15 @@
 <template>
   <b-container class="p-3">
-    <h1>ITX Transaction</h1>
-    <b-jumbotron>
-      <ul>
-        <li>
-          Your Address：<b>{{ walletAddress }}</b>
-        </li>
-        <li>
-          Your ITX Deposit：<b>{{ depositBalance }}ETH</b>
-        </li>
-      </ul>
-      {{ nowStatus }}
-      <b-form>
-        <b-button @click="deposit()">Deposit 1 ETH</b-button>
-        <b-button @click="getDeposit()">Check Deposit</b-button>
-      </b-form>
-    </b-jumbotron>
-    <hr>
-    <h1>Send Token</h1>
+    <h1>Wallet</h1>
     <b-jumbotron>
       <b-form>
         Amount:
         <b-input v-model="amount"></b-input>
         To:
         <b-input v-model="toAddress"></b-input>
-        <b-button @click="sendToken()">Send</b-button>
+        <b-button @click="sendToken()" class="my-1">Send</b-button>
       </b-form>
+      <p>トークンを返却する場合は，<b>0x9193ab3DCadc8F0B1A0ed19CB0395247f387222c</b>へ送信してください</p>
     </b-jumbotron>
   </b-container>
 </template>
@@ -47,19 +31,7 @@ const itx = new ethers.providers.InfuraProvider(
 )
 
 const fm = new Fortmatic(Private.fortmaticKey, Settings.network);
-let web3;
-if (typeof window !== 'undefined' && typeof window.ethereum !== 'undefined') {
-  web3 = new Web3(window.ethereum)
-  window.ethereum.enable().catch(error => {
-    // User denied account access
-    console.log(error)
-  })
-} else if (typeof window !== 'undefined' && typeof window.web3 !== 'undefined') {
-  web3 = new Web3(window.web3.currentProvider)
-} else {
-  const httpEndpoint = 'http://127.0.0.1:7545'
-  web3 = new Web3(new Web3.providers.HttpProvider(httpEndpoint))
-}
+let web3 = new Web3(fm.getProvider());
 
 const signer = new ethers.Wallet(Private.privateKey, itx);
 
@@ -67,7 +39,9 @@ const wait = (milliseconds) => {
   return new Promise((resolve) => setTimeout(resolve, milliseconds))
 }
 
-export default Vue.extend({
+export default {
+  // 認証をすべてなくしたとてつもなくやばいやつです
+  name:'Wallet',
   data() {
     return {
       tokenAddress: Settings.tokenContractAddress,
@@ -75,50 +49,24 @@ export default Vue.extend({
       contract: "",
       depositBalance: 0,
       nowStatus: "",
-      amount: 1,
-      toAddress: "0x9193ab3DCadc8F0B1A0ed19CB0395247f387222c",
-      tokenName:"",
-      tokenSymbol:"",
-      chainId:"",
-      version:""
+      amount: 0,
+      toAddress: ""
     }
   },
-  async mounted() {
+  async created() {
     this.contract = new web3.eth.Contract(ABI, Settings.tokenContractAddress);
     this.nowStatus = "Walletとの接続をしています";
-    this.walletAddress = (await web3.eth.getAccounts())[0];
+    this.walletAddress = await web3.eth.getCoinbase();
     this.nowStatus = "Walletと接続しました";
-    await this.getDeposit();
-    this.tokenName = await this.contract.methods.name().call();
-    this.tokenSymbol = await this.contract.methods.symbol().call();
-    this.chainId = await web3.eth.net.getId();
-    this.version = await this.contract.methods.version().call();
   },
   methods: {
-    getDeposit: async function () {
-      this.nowStatus = "ITX Depositの残高を取得しています";
-      const response = await itx.send('relay_getBalance', [signer.address]);
-      this.nowStatus = "ITX Depositの残高を取得しました";
-      this.depositBalance = response.balance / 10 ** 18;
-    },
-    deposit: async function () {
-      // BoolにDepositする
-      const tx = await signer.sendTransaction({
-        to: Settings.ITXDepositContractAddress,
-        value: ethers.utils.parseUnits('0.1', 'ether'),
-      })
-      signer.sendTransaction()
-      this.nowStatus = "マイニングされるのを待機しています"
-      await tx.wait()
-      this.nowStatus = "正常に追加されました"
-    },
     getBalance: async function () {
       let balance = parseFloat(await this.contract.methods.balanceOf(this.walletAddress).call())
       let decimals = parseFloat(await this.contract.methods.decimals().call())
       balance /= 10 ** decimals
       return balance
     },
-    async createPayload() {
+    createPayload() {
       return {
         types: {
           EIP712Domain: [
@@ -137,9 +85,9 @@ export default Vue.extend({
           ],
         },
         domain: {
-          name: this.tokenName,
-          version: this.version,
-          chainId: this.chainId,
+          name: "HackToken",
+          version: "1.0",
+          chainId: 3,
           verifyingContract: Settings.tokenContractAddress,
         },
         primaryType: "TransferWithAuthorization",
@@ -153,14 +101,18 @@ export default Vue.extend({
         }
       }
     },
-    sendToken: async function () {
-      const payload = await this.createPayload();
-      console.log(payload);
+    sendToken: async function (req, res, next) {
+
+      console.log(this.amount);
+      const sendAmount = parseFloat(this.amount);
+
+      const payload = this.createPayload();
       const from = this.walletAddress;
-      const params = [from, JSON.stringify(payload)];
+      console.log(from);
+      const params = [from, payload];
       const method = 'eth_signTypedData_v4';
       web3.currentProvider.sendAsync({
-        id: this.chainId,
+        id: 3,
         method,
         params,
         from
@@ -171,23 +123,44 @@ export default Vue.extend({
       });
     },
     sendWithITX: async function (result, payload) {
-      const sig = result.result;
-      // const v = "0x" + userSignature.slice(130, 132);
-      // const r = userSignature.slice(0, 66);
-      // const s = "0x" + userSignature.slice(66, 130);
-      const v = '0x' + sig.slice(130, 132);
-      const r =  sig.slice(0, 66);
-      const s = '0x' + sig.slice(66, 130);
+      const userSignature = result.result;
+      console.log(userSignature)
+      const v = "0x" + userSignature.slice(130, 132);
+      const r = userSignature.slice(0, 66);
+      const s = "0x" + userSignature.slice(66, 130);
       console.log("v:", v, "r:", r, "s:", s);
+      const iface = new ethers.utils.Interface(ABI);
+      const encodedData = iface.encodeFunctionData('transferWithAuthorization',
+        [this.walletAddress,
+          this.toAddress,
+          this.amount,
+          payload.message.validAfter,
+          payload.message.validBefore,
+          payload.message.nonce,
+          v, r, s])
 
-      await this.contract.methods.transferWithAuthorization(
-        payload.message.from,
-        payload.message.to,
-        payload.message.value,
-        payload.message.validAfter,
-        payload.message.validBefore,
-        payload.message.nonce,
-        v, r, s).call();
+      console.log(encodedData)
+
+      console.log("Before Balance:" + await this.getBalance())
+
+      const tx = {
+        to: Settings.tokenContractAddress,
+        data: encodedData,
+        gas: '100000',
+        schedule: 'fast'
+      }
+
+      //TxにSignerが署名をする
+      const signature = await this.signRequest(tx)
+      console.log(signature)
+
+      const relayTransactionHash = await itx.send('relay_sendTransaction', [
+        tx,
+        signature
+      ])
+      this.nowStatus = relayTransactionHash.relayTransactionHash;
+      const receipt = await this.waitTx(relayTransactionHash.relayTransactionHash)
+      this.nowStatus = `マイニングされまいした。at Block${receipt.blockNumber}`
     },
     signRequest: async function (tx) {
       const relayTransactionHash = ethers.utils.keccak256(
@@ -200,14 +173,15 @@ export default Vue.extend({
     },
     waitTx: async function (relayTransactionHash) {
       let mined = false
-      while (mined) {
+      while (!mined) {
         const statusResponse = await itx.send('relay_getTransactionStatus', [
           relayTransactionHash
         ])
         if (statusResponse.broadcasts) {
-          for (let i = 0; i < statusResponse.broadcasts.length(); i++) {
+          for (let i = 0; i < statusResponse.broadcasts.length; i++) {
             const bc = statusResponse.broadcasts[i];
             const receipt = await itx.getTransaction(bc.ethTxHash)
+            this.nowStatus = `マイニングされるのを待機しています...${receipt.confirmations}`;
             if (receipt && receipt.confirmations && receipt.confirmations > 1) {
               mined = true
               return receipt
@@ -218,5 +192,5 @@ export default Vue.extend({
       }
     }
   }
-})
+}
 </script>

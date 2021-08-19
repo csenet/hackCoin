@@ -1,41 +1,39 @@
 <template>
-  <b-container class="p-3">
-    <h1>ITX Transaction</h1>
-    <b-jumbotron>
-      <ul>
-        <li>
-          Your Address：<b>{{ walletAddress }}</b>
-        </li>
-        <li>
-          Your ITX Deposit：<b>{{ depositBalance }}ETH</b>
-        </li>
-      </ul>
-      {{ nowStatus }}
-      <b-form>
-        <b-button @click="deposit()">Deposit 1 ETH</b-button>
-        <b-button @click="getDeposit()">Check Deposit</b-button>
-      </b-form>
-    </b-jumbotron>
+  <div class="container pt-5">
+    <h1 class="display-6">{{ this.QuestData.title }}</h1>
     <hr>
-    <h1>Send Token</h1>
-    <b-jumbotron>
-      <b-form>
-        Amount:
-        <b-input v-model="amount"></b-input>
-        To:
-        <b-input v-model="toAddress"></b-input>
-        <b-button @click="sendToken()">Send</b-button>
-      </b-form>
-    </b-jumbotron>
-  </b-container>
+    <b>Status: {{ this.QuestData.status }}</b>
+    <span class="text-muted" style="float:right;">Requested By：{{ this.QuestData.clientName }}</span>
+    <div class="pt-3">
+      <b-container>
+        {{ this.QuestData.description }}
+      </b-container>
+    </div>
+    <hr>
+    <span class="text-muted">Reward</span>
+    <h3 class="px-2">{{ this.QuestData.coin }} HACK</h3>
+    <b-button variant="outline-dark" @click="receiveQuest"
+              v-if='(this.QuestData.status=="recruiting")&&(this.QuestData.clientAddress!==this.walletAddress)'
+    >Receive Quest
+    </b-button>
+    <b-button variant="outline-dark" @click="finishQuest"
+              v-if='(this.QuestData.status=="onprogress")&&(this.QuestData.clientAddress!==this.walletAddress)'
+    >Mark as Finished
+    </b-button>
+    <b-button variant="outline-dark" @click="getReward"
+              v-if='(this.QuestData.status=="waitingPayment")&&(this.QuestData.clientAddress===this.walletAddress)'
+    >Pay Reward
+    </b-button>
+    <p>{{ this.nowStatus }}</p>
+  </div>
 </template>
 
 <script>
+
 import Web3 from "web3";
 import Fortmatic from "fortmatic";
-import Vue from "vue";
 
-import ABI from "~/assets/abi.json";
+import ABI from "~/assets/abi.json"
 import Settings from "~/assets/settings.json"
 import Private from "~/assets/private.json"
 
@@ -46,52 +44,69 @@ const itx = new ethers.providers.InfuraProvider(
   Private.infuraKey
 )
 
+const signer = new ethers.Wallet(Private.privateKey, itx);
+
 const fm = new Fortmatic(Private.fortmaticKey, Settings.network);
 let web3 = new Web3(fm.getProvider());
-
-const signer = new ethers.Wallet(Private.privateKey, itx);
 
 const wait = (milliseconds) => {
   return new Promise((resolve) => setTimeout(resolve, milliseconds))
 }
 
-export default Vue.extend({
-  // 認証をすべてなくしたとてつもなくやばいやつです
+export default {
+  name: "request",
+  async asyncData({params}) {
+    const id = params.requestId
+    return {id}
+  },
   data() {
     return {
+      QuestData: {},
       tokenAddress: Settings.tokenContractAddress,
       walletAddress: "",
       contract: "",
       depositBalance: 0,
       nowStatus: "",
-      amount: 1,
-      toAddress: "0x9193ab3DCadc8F0B1A0ed19CB0395247f387222c"
+      amount: 0,
+      toAddress: ""
     }
   },
-  async created() {
+  async mounted() {
     this.contract = new web3.eth.Contract(ABI, Settings.tokenContractAddress);
-    this.nowStatus = "Walletとの接続をしています";
     this.walletAddress = await web3.eth.getCoinbase();
-    this.nowStatus = "Walletと接続しました";
-    await this.getDeposit();
+    const Ref = this.$fire.database.ref('request/' + this.id + '/');
+    Ref.on('value', (res) => {
+      const data = res.val();
+      this.QuestData = data;
+    });
   },
   methods: {
-    getDeposit: async function () {
-      this.nowStatus = "ITX Depositの残高を取得しています";
-      const response = await itx.send('relay_getBalance', [signer.address]);
-      this.nowStatus = "ITX Depositの残高を取得しました";
-      this.depositBalance = response.balance / 10 ** 18;
+    async receiveQuest() {
+      let data = this.QuestData;
+      data.recipientAddress = this.walletAddress;
+      data.status = "onprogress";
+      const updates = {};
+      updates['/request/' + this.id] = data;
+      await this.$fire.database.ref().update(updates);
     },
-    deposit: async function () {
-      // BoolにDepositする
-      const tx = await signer.sendTransaction({
-        to: Settings.ITXDepositContractAddress,
-        value: ethers.utils.parseUnits('0.1', 'ether'),
-      })
-      signer.sendTransaction()
-      this.nowStatus = "マイニングされるのを待機しています"
-      await tx.wait()
-      this.nowStatus = "正常に追加されました"
+    async finishQuest() {
+      let data = this.QuestData;
+      data.status = "waitingPayment";
+      const updates = {};
+      updates['/request/' + this.id] = data;
+      await this.$fire.database.ref().update(updates);
+    },
+    async paymentDone(){
+      let data = this.QuestData;
+      data.status = "finished";
+      const updates = {};
+      updates['/request/' + this.id] = data;
+      await this.$fire.database.ref().update(updates);
+    },
+    async getReward() {
+      this.toAddress = this.QuestData.recipientAddress;
+      this.amount = this.QuestData.coin;
+      await this.sendToken();
     },
     getBalance: async function () {
       let balance = parseFloat(await this.contract.methods.balanceOf(this.walletAddress).call())
@@ -134,11 +149,7 @@ export default Vue.extend({
         }
       }
     },
-    sendToken: async function (req, res, next) {
-
-      console.log(this.amount);
-      const sendAmount = parseFloat(this.amount);
-
+    sendToken: async function () {
       const payload = this.createPayload();
       const from = this.walletAddress;
       console.log(from);
@@ -193,7 +204,8 @@ export default Vue.extend({
       ])
       this.nowStatus = relayTransactionHash.relayTransactionHash;
       const receipt = await this.waitTx(relayTransactionHash.relayTransactionHash)
-      this.nowStatus = `マイニングされまいした。at Block${receipt.blockNumber}`
+      this.nowStatus = `マイニングされました。at Block${receipt.blockNumber}`
+      await this.paymentDone()
     },
     signRequest: async function (tx) {
       const relayTransactionHash = ethers.utils.keccak256(
@@ -225,5 +237,9 @@ export default Vue.extend({
       }
     }
   }
-})
+}
 </script>
+
+<style scoped>
+
+</style>

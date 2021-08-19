@@ -1,0 +1,35 @@
+<template>
+  <nav class="navbar navbar-expand-md navbar-light bg-light">
+    <div class="container-fluid">
+      <a class="navbar-brand" href="/">Hack Share</a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent"
+              aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navbarSupportedContent">
+        <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+          <li class="nav-item">
+            <a class="nav-link active" aria-current="page" href="/">Home</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="/orderQuest">OrderQuest</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="/myQuests">MyQuestst</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="/wallet">Wallet</a>
+          </li>
+        </ul>
+        <BalanceCheck/>
+      </div>
+    </div>
+  </nav>
+</template>
+<script>
+import BalanceCheck from "@/components/BalanceCheck"
+
+export default {
+  components: {BalanceCheck}
+}
+</script>

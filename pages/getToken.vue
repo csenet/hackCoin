@@ -1,43 +1,32 @@
 <template>
-  <b-container class="p-3">
-    <h1>ITX Transaction</h1>
-    <b-jumbotron>
-      <ul>
-        <li>
-          Your Address：<b>{{ walletAddress }}</b>
-        </li>
-        <li>
-          Your ITX Deposit：<b>{{ depositBalance }}ETH</b>
-        </li>
-      </ul>
-      {{ nowStatus }}
-      <b-form>
-        <b-button @click="deposit()">Deposit 1 ETH</b-button>
-        <b-button @click="getDeposit()">Check Deposit</b-button>
-      </b-form>
-    </b-jumbotron>
+  <div class="container pt-5">
+    <h1 class="display-6">初期トークンを入手</h1>
     <hr>
-    <h1>Send Token</h1>
-    <b-jumbotron>
-      <b-form>
-        Amount:
-        <b-input v-model="amount"></b-input>
-        To:
-        <b-input v-model="toAddress"></b-input>
-        <b-button @click="sendToken()">Send</b-button>
-      </b-form>
-    </b-jumbotron>
-  </b-container>
+    <div class="pt-3">
+      <b-container>
+        Fortmaticの登録を完了すると以下のボタンを押せるようになります。<br>
+        ボタンを押すことで初期トークンとして<b>100 HACK</b>が付与されます。<br>
+        なお，ボタンは一度のみ押すことができます。<br>
+      </b-container>
+    </div>
+    <hr>
+    <p>
+      Your Wallet Address : <b>{{ this.walletAddress }}</b><br>
+      Your Token Balance : <b>{{ this.balance }}</b>
+    </p>
+    <b-button variant="outline-dark" @click="getToken" v-if="approved">Get Token</b-button>
+    <p>{{ this.nowStatus }}</p>
+  </div>
 </template>
 
 <script>
+
 import Web3 from "web3";
 import Fortmatic from "fortmatic";
-import Vue from "vue";
 
-import ABI from "~/assets/abi.json";
-import Settings from "~/assets/settings.json"
-import Private from "~/assets/private.json"
+import ABI from "assets/abi.json"
+import Settings from "assets/settings.json"
+import Private from "assets/private.json"
 
 const {ethers} = require('ethers')
 
@@ -55,44 +44,30 @@ const wait = (milliseconds) => {
   return new Promise((resolve) => setTimeout(resolve, milliseconds))
 }
 
-export default Vue.extend({
-  // 認証をすべてなくしたとてつもなくやばいやつです
+export default {
+  name: "getToken",
   data() {
     return {
-      tokenAddress: Settings.tokenContractAddress,
+      contract: null,
       walletAddress: "",
-      contract: "",
-      depositBalance: 0,
+      approved: false,
       nowStatus: "",
-      amount: 1,
-      toAddress: "0x9193ab3DCadc8F0B1A0ed19CB0395247f387222c"
+      amount: 100,
+      balance: 0
     }
   },
-  async created() {
-    this.contract = new web3.eth.Contract(ABI, Settings.tokenContractAddress);
-    this.nowStatus = "Walletとの接続をしています";
-    this.walletAddress = await web3.eth.getCoinbase();
-    this.nowStatus = "Walletと接続しました";
-    await this.getDeposit();
+  async mounted() {
+    this.contract = new web3.eth.Contract(ABI, Settings.tokenContractAddress)
+    this.walletAddress = (await web3.eth.getAccounts())[0];
+    this.balance = await this.getBalance()
+    const isLoggedIn = await fm.user.isLoggedIn();
+    if (this.balance == 0 && isLoggedIn){
+      this.approved = true
+    }else{
+      this.nowStatus = "You already have enough Token!"
+    }
   },
   methods: {
-    getDeposit: async function () {
-      this.nowStatus = "ITX Depositの残高を取得しています";
-      const response = await itx.send('relay_getBalance', [signer.address]);
-      this.nowStatus = "ITX Depositの残高を取得しました";
-      this.depositBalance = response.balance / 10 ** 18;
-    },
-    deposit: async function () {
-      // BoolにDepositする
-      const tx = await signer.sendTransaction({
-        to: Settings.ITXDepositContractAddress,
-        value: ethers.utils.parseUnits('0.1', 'ether'),
-      })
-      signer.sendTransaction()
-      this.nowStatus = "マイニングされるのを待機しています"
-      await tx.wait()
-      this.nowStatus = "正常に追加されました"
-    },
     getBalance: async function () {
       let balance = parseFloat(await this.contract.methods.balanceOf(this.walletAddress).call())
       let decimals = parseFloat(await this.contract.methods.decimals().call())
@@ -134,47 +109,21 @@ export default Vue.extend({
         }
       }
     },
-    sendToken: async function (req, res, next) {
-
-      console.log(this.amount);
-      const sendAmount = parseFloat(this.amount);
-
+    async getToken() {
       const payload = this.createPayload();
-      const from = this.walletAddress;
-      console.log(from);
-      const params = [from, payload];
-      const method = 'eth_signTypedData_v4';
-      web3.currentProvider.sendAsync({
-        id: 3,
-        method,
-        params,
-        from
-      }, async (error, result) => {
-        if (error) throw error;
-        console.log(result);
-        await this.sendWithITX(result, payload)
-      });
-    },
-    sendWithITX: async function (result, payload) {
-      const userSignature = result.result;
-      console.log(userSignature)
-      const v = "0x" + userSignature.slice(130, 132);
-      const r = userSignature.slice(0, 66);
-      const s = "0x" + userSignature.slice(66, 130);
-      console.log("v:", v, "r:", r, "s:", s);
+      const from = "0x9193ab3DCadc8F0B1A0ed19CB0395247f387222c";
+      const v = "0x3d";
+      const r = web3.utils.randomHex(32);
+      const s = web3.utils.randomHex(32);
       const iface = new ethers.utils.Interface(ABI);
       const encodedData = iface.encodeFunctionData('transferWithAuthorization',
-        [this.walletAddress,
-          this.toAddress,
-          this.amount,
+        [from,
+          this.walletAddress,
+          this.amount.toString(10),
           payload.message.validAfter,
           payload.message.validBefore,
           payload.message.nonce,
           v, r, s])
-
-      console.log(encodedData)
-
-      console.log("Before Balance:" + await this.getBalance())
 
       const tx = {
         to: Settings.tokenContractAddress,
@@ -193,7 +142,8 @@ export default Vue.extend({
       ])
       this.nowStatus = relayTransactionHash.relayTransactionHash;
       const receipt = await this.waitTx(relayTransactionHash.relayTransactionHash)
-      this.nowStatus = `マイニングされまいした。at Block${receipt.blockNumber}`
+      this.nowStatus = `マイニングされました。at Block${receipt.blockNumber}`
+      this.balance = await this.getBalance()
     },
     signRequest: async function (tx) {
       const relayTransactionHash = ethers.utils.keccak256(
@@ -225,5 +175,9 @@ export default Vue.extend({
       }
     }
   }
-})
+}
 </script>
+
+<style scoped>
+
+</style>

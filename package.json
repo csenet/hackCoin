@@ -10,17 +10,20 @@
   },
   "dependencies": {
     "@metamask/detect-provider": "^1.2.0",
+    "@nuxtjs/firebase": "^7.6.1",
     "bootstrap": "5.1.0",
     "bootstrap-vue": "2.21.2",
     "core-js": "3.16.0",
     "ethers": "5.4.4",
+    "firebase": "^8.9.1",
     "fortmatic": "2.2.1",
     "nuxt": "2.15.7",
     "web3": "1.5.1"
   },
   "devDependencies": {
     "@nuxt/types": "2.15.7",
-    "@nuxt/typescript-build": "2.1.0"
+    "@nuxt/typescript-build": "2.1.0",
+    "vue-property-decorator": "^9.1.2"
   },
   "resolutions": {
     "@babel/core": "7.13.15",

@@ -1,0 +1,9 @@
+<template>
+  <div>
+    <Header/>
+    <b-container>
+      <Nuxt/>
+    </b-container>
+    <Footer/>
+  </div>
+</template>
