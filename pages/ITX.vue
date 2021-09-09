@@ -56,7 +56,7 @@ const wait = (milliseconds) => {
 }
 
 export default Vue.extend({
-  // 認証をすべてなくしたとてつもなくやばいやつです
+
   data() {
     return {
       tokenAddress: Settings.tokenContractAddress,
@@ -65,7 +65,11 @@ export default Vue.extend({
       depositBalance: 0,
       nowStatus: "",
       amount: 1,
-      toAddress: "0x9193ab3DCadc8F0B1A0ed19CB0395247f387222c"
+      toAddress: "0x9193ab3DCadc8F0B1A0ed19CB0395247f387222c",
+      tokenName: "",
+      tokenSymbol: "",
+      chainId: "",
+      version: ""
     }
   },
   async created() {
@@ -74,6 +78,10 @@ export default Vue.extend({
     this.walletAddress = await web3.eth.getCoinbase();
     this.nowStatus = "Walletと接続しました";
     await this.getDeposit();
+    this.tokenName = await this.contract.methods.name().call();
+    this.tokenSymbol = await this.contract.methods.symbol().call();
+    this.chainId = await web3.eth.net.getId();
+    this.version = await this.contract.methods.version().call();
   },
   methods: {
     getDeposit: async function () {
@@ -118,9 +126,9 @@ export default Vue.extend({
           ],
         },
         domain: {
-          name: "HackToken",
-          version: "1.0",
-          chainId: 3,
+          name: this.tokenName,
+          version: this.version,
+          chainId: this.chainId,
           verifyingContract: Settings.tokenContractAddress,
         },
         primaryType: "TransferWithAuthorization",
@@ -141,14 +149,12 @@ export default Vue.extend({
 
       const payload = this.createPayload();
       const from = this.walletAddress;
-      console.log(from);
-      const params = [from, payload];
-      const method = 'eth_signTypedData_v4';
+      console.log(payload)
+      console.log(from)
       web3.currentProvider.sendAsync({
         id: 3,
-        method,
-        params,
-        from
+        method: 'eth_signTypedData_v4',
+        params: [from, JSON.stringify(payload)],
       }, async (error, result) => {
         if (error) throw error;
         console.log(result);
@@ -156,11 +162,11 @@ export default Vue.extend({
       });
     },
     sendWithITX: async function (result, payload) {
-      const userSignature = result.result;
       console.log(userSignature)
-      const v = "0x" + userSignature.slice(130, 132);
-      const r = userSignature.slice(0, 66);
-      const s = "0x" + userSignature.slice(66, 130);
+      const userSignature = result.result.substring(2);
+      const r = "0x" + userSignature.substring(0, 64);
+      const s = "0x" + userSignature.substring(64, 128);
+      const v = parseInt(userSignature.substring(128, 130), 16);
       console.log("v:", v, "r:", r, "s:", s);
       const iface = new ethers.utils.Interface(ABI);
       const encodedData = iface.encodeFunctionData('transferWithAuthorization',

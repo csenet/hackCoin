@@ -26,6 +26,7 @@
         <b-input v-model="toAddress"></b-input>
         <b-button @click="sendToken()">Send</b-button>
       </b-form>
+      <p>{{ balance }}</p>
     </b-jumbotron>
   </b-container>
 </template>
@@ -41,12 +42,6 @@ import Private from "~/assets/private.json"
 
 const {ethers} = require('ethers')
 
-const itx = new ethers.providers.InfuraProvider(
-  Settings.network,
-  Private.infuraKey
-)
-
-const fm = new Fortmatic(Private.fortmaticKey, Settings.network);
 let web3;
 if (typeof window !== 'undefined' && typeof window.ethereum !== 'undefined') {
   web3 = new Web3(window.ethereum)
@@ -57,17 +52,17 @@ if (typeof window !== 'undefined' && typeof window.ethereum !== 'undefined') {
 } else if (typeof window !== 'undefined' && typeof window.web3 !== 'undefined') {
   web3 = new Web3(window.web3.currentProvider)
 } else {
-  const httpEndpoint = 'http://127.0.0.1:7545'
+  const httpEndpoint = 'http://localhost:8545'
   web3 = new Web3(new Web3.providers.HttpProvider(httpEndpoint))
 }
-
-const signer = new ethers.Wallet(Private.privateKey, itx);
+1337
 
 const wait = (milliseconds) => {
   return new Promise((resolve) => setTimeout(resolve, milliseconds))
 }
 
 export default Vue.extend({
+  layout: 'simple',
   data() {
     return {
       tokenAddress: Settings.tokenContractAddress,
@@ -77,10 +72,11 @@ export default Vue.extend({
       nowStatus: "",
       amount: 1,
       toAddress: "0x9193ab3DCadc8F0B1A0ed19CB0395247f387222c",
-      tokenName:"",
-      tokenSymbol:"",
-      chainId:"",
-      version:""
+      tokenName: "",
+      tokenSymbol: "",
+      chainId: 0,
+      version: "",
+      balance: 0
     }
   },
   async mounted() {
@@ -88,30 +84,14 @@ export default Vue.extend({
     this.nowStatus = "Walletとの接続をしています";
     this.walletAddress = (await web3.eth.getAccounts())[0];
     this.nowStatus = "Walletと接続しました";
-    await this.getDeposit();
     this.tokenName = await this.contract.methods.name().call();
     this.tokenSymbol = await this.contract.methods.symbol().call();
-    this.chainId = await web3.eth.net.getId();
+    this.chainId = 1337;
     this.version = await this.contract.methods.version().call();
+    this.balance = await this.getBalance()
+    console.log(this.balance)
   },
   methods: {
-    getDeposit: async function () {
-      this.nowStatus = "ITX Depositの残高を取得しています";
-      const response = await itx.send('relay_getBalance', [signer.address]);
-      this.nowStatus = "ITX Depositの残高を取得しました";
-      this.depositBalance = response.balance / 10 ** 18;
-    },
-    deposit: async function () {
-      // BoolにDepositする
-      const tx = await signer.sendTransaction({
-        to: Settings.ITXDepositContractAddress,
-        value: ethers.utils.parseUnits('0.1', 'ether'),
-      })
-      signer.sendTransaction()
-      this.nowStatus = "マイニングされるのを待機しています"
-      await tx.wait()
-      this.nowStatus = "正常に追加されました"
-    },
     getBalance: async function () {
       let balance = parseFloat(await this.contract.methods.balanceOf(this.walletAddress).call())
       let decimals = parseFloat(await this.contract.methods.decimals().call())
@@ -172,13 +152,11 @@ export default Vue.extend({
     },
     sendWithITX: async function (result, payload) {
       const sig = result.result;
-      // const v = "0x" + userSignature.slice(130, 132);
-      // const r = userSignature.slice(0, 66);
-      // const s = "0x" + userSignature.slice(66, 130);
       const v = '0x' + sig.slice(130, 132);
-      const r =  sig.slice(0, 66);
+      const r = sig.slice(0, 66);
       const s = '0x' + sig.slice(66, 130);
       console.log("v:", v, "r:", r, "s:", s);
+      console.log(payload)
 
       await this.contract.methods.transferWithAuthorization(
         payload.message.from,
@@ -187,13 +165,18 @@ export default Vue.extend({
         payload.message.validAfter,
         payload.message.validBefore,
         payload.message.nonce,
-        v, r, s).call();
+        v, r, s).send({
+        from: this.walletAddress,
+        to: Settings.tokenContractAddress,
+        value: 0.0,
+        gasPrice: '20000000000'
+      })
     },
     signRequest: async function (tx) {
       const relayTransactionHash = ethers.utils.keccak256(
         ethers.utils.defaultAbiCoder.encode(
           ['address', 'bytes', 'uint', 'uint', 'string'],
-          [tx.to, tx.data, tx.gas, 3, tx.schedule] // Ropsten chainId is 3
+          [tx.to, tx.data, tx.gas, 1337, tx.schedule] // Ropsten chainId is 3
         )
       )
       return await signer.signMessage(ethers.utils.arrayify(relayTransactionHash))
