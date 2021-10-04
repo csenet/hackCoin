@@ -1,0 +1,19 @@
+service: hackcoin-api
+
+provider:
+  name: aws
+  runtime: nodejs14.x
+  region: ap-northeast-1 # Tokyo
+
+package:
+  exclude:
+    - .git/**
+    - test/**
+    - README.md
+
+functions:
+  hackcoinAPI:
+    handler: lambda.handler
+    events:
+      - http: ANY /
+      - http: 'ANY {proxy+}'

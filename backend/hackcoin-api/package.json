@@ -1,0 +1,14 @@
+{
+  "dependencies": {
+    "aws-kms-provider": "^0.3.4",
+
+    "aws-sdk": "^2.999.0",
+    "aws-serverless-express": "^3.4.0",
+    "express": "^4.17.1",
+    "web3": "^1.6.0",
+    "web3-eth-accounts": "^1.6.0"
+  },
+  "scripts": {
+    "start": "node local-app"
+  }
+}
