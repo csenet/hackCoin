@@ -2,8 +2,8 @@ const mongoose = require('mongoose')
 const Schema = mongoose.Schema
 
 const UserSchema = new Schema({
-  typetalkId: {
-    type: String,
+  account: {
+    type: JSON,
     required: true
   },
   address: {

@@ -8,7 +8,7 @@ exports.webhook = async (req, res) => {
 
   let message = "";
 
-  if (command.match(/hello/)) {
+  if (command.match(/^hello/)) {
     message = echoBot(data);
   } else if (command.match(/^register .*/)) {
     message = await register(data);
@@ -29,13 +29,13 @@ async function register(data) {
     return "Error: Invalid Command"
   }
   const address = token[1];
-  const userId = data.post.account.id;
-  if (await User.findOne({typetalkId: userId})) {
+  const account = data.post.account;
+  if (await User.findOne({'account.id': data.post.account.id})) {
     // 更新
     await User.findOneAndUpdate(
-      {typetalkId: userId},
+      {'account.id': data.post.account.id},
       {
-        typetalkId: userId,
+        account: account,
         address: address
       },
       {new: true}
@@ -43,7 +43,7 @@ async function register(data) {
   } else {
     // 新規作成
     const userInfo = new User({
-      typetalkId: userId,
+      account: account,
       address: address
     })
     await userInfo.save()
