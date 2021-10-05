@@ -1,12 +1,10 @@
 const express = require('express');
 const router = express.Router();
 
-// Service
-const bot = require('../services/bot');
+// Controller
+const bot = require('../controllers/botController')
 
-router.post('/webhook', (req, res) => {
-  const replay = bot(req.body, res);
-});
+router.post('/webhook', bot.webhook)
 
 router.get('/users', (req, res) => {
   res.json([{name: 'Taro'}, {name: 'Hanako'}]);

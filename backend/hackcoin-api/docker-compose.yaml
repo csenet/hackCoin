@@ -10,4 +10,27 @@ services:
   app:
     build: "./app"
     ports:
-      - "80:8080"
+      - "8080:8080"
+    environment:
+      DB_HOST: cluster0.egtnh.mongodb.net/user
+      DB_USER: admin
+      DB_PASSWORD: nBA4MXm74LLN4gYm
+    depends_on:
+      - redis
+
+  caddy:
+    image: caddy:latest
+    volumes:
+      - "./caddy/Caddyfile:/etc/caddy/Caddyfile"
+      - "caddy_data:/caddy_data"
+    environment:
+      HOSTNAME: localhost
+    depends_on:
+      - app
+    ports:
+      - "80:80"
+      - "443:443"
+
+volumes:
+  caddy_data:
+    driver: "local"

@@ -1,13 +1,15 @@
-const express = require('express')
-const app = express()
-const bodyParser = require('body-parser')
+const mongoose = require('mongoose')
+mongoose.connect(`mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASSWORD}@${process.env.DB_HOST}?retryWrites=true&w=majority`)
+require('./models/user')
 
-const router = require('./routes/router')
+const express = require('express'),
+  app = express(),
+  bodyParser = require('body-parser'),
+  router = require('./routes/router')
 
 app.use(bodyParser.urlencoded({
   extended: true
 }));
-
 app.use(bodyParser.json());
 app.use('/', router)
 
