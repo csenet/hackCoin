@@ -1,4 +1,4 @@
-service: hackcoin-api
+service: hackcoin-api-aws
 
 provider:
   name: aws
