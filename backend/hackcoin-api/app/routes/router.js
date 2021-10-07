@@ -21,6 +21,7 @@ router.get('/users', (req, res) => {
 
 router.get('/work', async (req, res) => {
   const job = queue.createJob({to: "0x523255e13aDB9F02B148B5C79F9C77A5f02494E8", value: 30});
+  await job.save()
   res.json("OK")
 })
 

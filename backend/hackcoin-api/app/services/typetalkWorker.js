@@ -3,6 +3,16 @@ const WebSocket = require('ws'),
 
 const db = require('../controllers/dbController');
 
+const Queue = require('bee-queue');
+const Web3 = require("../controllers/web3Contoller");
+const queue = new Queue('transfer', {
+  redis: {
+    host: 'redis',
+  },
+  isWorker: false
+});
+
+
 const client_id = process.env.TYPETALK_CLIENT_ID
 const client_secret = process.env.TYPETALK_CLIENT_SECRET
 
@@ -42,18 +52,33 @@ function connect(access_token) {
   });
 
   ws.on('open', function () {
-    console.log('connected streaming server');
+    // console.log('connected streaming server');
   }).on('close', function () {
-    console.log('disconnected streaming server');
+    // console.log('disconnected streaming server');
     connect(access_token);
   }).on('message', async function (data, flags) {
     data = JSON.parse(data)
     if (data.type == "likeMessage") {
       const topic = data.data.topic.name;
-      const account = data.data.like.account;
-      console.log(`New Like! topic:${topic} name:${account.fullName}`)
-      const id = account.id;
-      console.log(await db.getUserAddress(id));
+      const sender = data.data.like.account;
+      const receiver = data.data.post.account;
+      console.log(`New Like! topic:${topic} from:${sender.fullName} to:${receiver.fullName}`)
+      const senderAddress = await db.getUserAddress(sender.id);
+      if (senderAddress) {
+        // いいねを送った人
+        // アドレスが登録されている場合にTokenを送金
+        console.log(senderAddress)
+        const job = queue.createJob({to: senderAddress, value: process.env.VALANCE});
+        await job.save();
+      }
+      const receiverAddress = await db.getUserAddress(receiver.id);
+      if (receiverAddress) {
+        // いいねをした人
+        // アドレスが登録されている場合にTokenを送金
+        console.log(receiverAddress)
+        const job = queue.createJob({to: receiverAddress, value: process.env.VALANCE});
+        await job.save();
+      }
     }
   });
 }

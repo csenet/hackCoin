@@ -1,6 +1,7 @@
-const mongoose = require("mongoose"),
-  User = mongoose.model('Users')
 const web3 = require('web3')
+
+const db = require('./dbController')
+const web3Controller = require('./web3Contoller')
 
 exports.webhook = async (req, res) => {
   const data = req.body
@@ -10,9 +11,14 @@ exports.webhook = async (req, res) => {
   let message = "";
 
   if (command.match(/^hello/)) {
-    message = echoBot(data);
+    // 挨拶を返します
+    message = echoBot(data)
   } else if (command.match(/^register .*/)) {
-    message = await register(data);
+    // 新しくWallet Addressを登録します
+    message = await register(data)
+  } else if (command.match(/^check/)) {
+    // 現在の残高を確認します
+    message = await getMyBalance(data)
   }
 
   const reply = message ? {"message": message, "replyTo": postId} : {}
@@ -32,27 +38,20 @@ async function register(data) {
   const address = token[1];
   const account = data.post.account;
   // 正しいアドレスか検証
-  if(!web3.utils.isAddress(address)){
+  if (!web3.utils.isAddress(address)) {
     return "Error: Invalid Address"
   }
-
-  if (await User.findOne({'account.id': data.post.account.id})) {
-    // 更新
-    await User.findOneAndUpdate(
-      {'account.id': data.post.account.id},
-      {
-        account: account,
-        address: address
-      },
-      {new: true}
-    )
-  } else {
-    // 新規作成
-    const userInfo = new User({
-      account: account,
-      address: address
-    })
-    await userInfo.save()
-  }
+  const id = account.id;
+  await db.updateAddress(id, address, account)
   return `Successfully registered!\n address: ${address}`
+}
+
+async function getMyBalance(data) {
+  const id = data.post.account.id;
+  const address = await db.getUserAddress(id)
+  if (!address) {
+    return "Addressが登録されていません"
+  }
+  const balance = await web3Controller.getBalance(address);
+  return `あなたのHack Coinの残高は...\n${balance} HACK!`
 }

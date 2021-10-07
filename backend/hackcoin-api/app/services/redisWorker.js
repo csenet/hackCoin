@@ -6,7 +6,7 @@ const queue = new Queue('transfer', {
   isWorker: true
 })
 
-const Web3 = require('../controllers/web3Contoller')
+const Webs3 = require('../controllers/web3Contoller')
 
 queue.process(async function (job, done) {
   console.log(`Processing job ${job.id}`)
