@@ -32,7 +32,7 @@ async function register(data) {
   const address = token[1];
   const account = data.post.account;
   // 正しいアドレスか検証
-  if(!web3.utils.isAddress(account)){
+  if(!web3.utils.isAddress(address)){
     return "Error: Invalid Address"
   }
 
