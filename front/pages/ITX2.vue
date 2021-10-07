@@ -32,7 +32,7 @@
 </template>
 
 <script>
-import Web3 from "web3";
+import Web3Contoller from "web3";
 import Fortmatic from "fortmatic";
 import Vue from "vue";
 
@@ -44,16 +44,16 @@ const {ethers} = require('ethers')
 
 let web3;
 if (typeof window !== 'undefined' && typeof window.ethereum !== 'undefined') {
-  web3 = new Web3(window.ethereum)
+  web3 = new Web3Contoller(window.ethereum)
   window.ethereum.enable().catch(error => {
     // User denied account access
     console.log(error)
   })
 } else if (typeof window !== 'undefined' && typeof window.web3 !== 'undefined') {
-  web3 = new Web3(window.web3.currentProvider)
+  web3 = new Web3Contoller(window.web3.currentProvider)
 } else {
   const httpEndpoint = 'http://localhost:8545'
-  web3 = new Web3(new Web3.providers.HttpProvider(httpEndpoint))
+  web3 = new Web3Contoller(new Web3Contoller.providers.HttpProvider(httpEndpoint))
 }
 1337
 

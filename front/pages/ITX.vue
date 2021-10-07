@@ -31,7 +31,7 @@
 </template>
 
 <script>
-import Web3 from "web3";
+import Web3Contoller from "web3";
 import Fortmatic from "fortmatic";
 import Vue from "vue";
 
@@ -47,7 +47,7 @@ const itx = new ethers.providers.InfuraProvider(
 )
 
 const fm = new Fortmatic(Private.fortmaticKey, Settings.network);
-let web3 = new Web3(fm.getProvider());
+let web3 = new Web3Contoller(fm.getProvider());
 
 const signer = new ethers.Wallet(Private.privateKey, itx);
 

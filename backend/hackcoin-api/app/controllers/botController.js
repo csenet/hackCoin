@@ -1,5 +1,6 @@
 const mongoose = require("mongoose"),
   User = mongoose.model('Users')
+const web3 = require('web3')
 
 exports.webhook = async (req, res) => {
   const data = req.body
@@ -30,6 +31,11 @@ async function register(data) {
   }
   const address = token[1];
   const account = data.post.account;
+  // 正しいアドレスか検証
+  if(!web3.utils.isAddress(account)){
+    return "Error: Invalid Address"
+  }
+
   if (await User.findOne({'account.id': data.post.account.id})) {
     // 更新
     await User.findOneAndUpdate(

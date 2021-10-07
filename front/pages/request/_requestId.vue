@@ -30,7 +30,7 @@
 
 <script>
 
-import Web3 from "web3";
+import Web3Contoller from "web3";
 import Fortmatic from "fortmatic";
 
 import ABI from "~/assets/abi.json"
@@ -47,7 +47,7 @@ const itx = new ethers.providers.InfuraProvider(
 const signer = new ethers.Wallet(Private.privateKey, itx);
 
 const fm = new Fortmatic(Private.fortmaticKey, Settings.network);
-let web3 = new Web3(fm.getProvider());
+let web3 = new Web3Contoller(fm.getProvider());
 
 const wait = (milliseconds) => {
   return new Promise((resolve) => setTimeout(resolve, milliseconds))

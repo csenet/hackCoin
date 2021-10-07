@@ -25,14 +25,14 @@
 </template>
 
 <script>
-import Web3 from "web3";
+import Web3Contoller from "web3";
 import Fortmatic from "fortmatic";
 
 import Private from "assets/private.json";
 import Settings from "assets/settings.json";
 
 const fm = new Fortmatic(Private.fortmaticKey, Settings.network);
-let web3 = new Web3(fm.getProvider());
+let web3 = new Web3Contoller(fm.getProvider());
 
 export default {
   name: "OrderQuest",

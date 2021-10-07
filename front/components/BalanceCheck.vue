@@ -6,7 +6,7 @@
 
 <script>
 import Vue from 'vue';
-import Web3 from "web3";
+import Web3Contoller from "web3";
 import Fortmatic from "fortmatic";
 
 import ABI from "~/assets/abi.json"
@@ -14,7 +14,7 @@ import Settings from "~/assets/settings.json"
 import Private from "~/assets/private.json"
 
 const fm = new Fortmatic(Private.fortmaticKey, Settings.network);
-let web3 = new Web3(fm.getProvider());
+let web3 = new Web3Contoller(fm.getProvider());
 
 export default {
   data() {

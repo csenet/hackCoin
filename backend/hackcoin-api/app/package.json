@@ -4,9 +4,13 @@
   "main": "index.js",
   "license": "MIT",
   "dependencies": {
+    "bee-queue": "^1.4.0",
     "body-parser": "^1.19.0",
+    "ethereumjs-tx": "^2.1.2",
     "express": "^4.17.1",
     "mongoose": "^6.0.9",
-    "web3": "^1.6.0"
+    "request": "^2.88.2",
+    "web3": "^1.6.0",
+    "ws": "^8.2.3"
   }
 }
