@@ -1,17 +1,16 @@
-const WebSocket = require('ws'),
-  request = require('request');
+const WebSocket = require('ws')
 
 const db = require('../controllers/dbController');
 
 const Queue = require('bee-queue');
-const Web3 = require("../controllers/web3Contoller");
+const axios = require("axios");
+
 const queue = new Queue('transfer', {
   redis: {
     host: 'redis',
   },
   isWorker: false
 });
-
 
 const client_id = process.env.TYPETALK_CLIENT_ID
 const client_secret = process.env.TYPETALK_CLIENT_SECRET
@@ -21,43 +20,22 @@ if (!(client_id && client_secret)) {
   process.exit(1);
 }
 
-function issue_access_token(callback) {
-  const options = {
-    url: "https://typetalk.com/oauth2/access_token",
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/x-www-form-urlencoded'
-    },
-    form: {
-      'client_id': client_id,
-      'client_secret': client_secret,
-      'grant_type': 'client_credentials'
-    }
-  }
 
-  request(options, function (error, response, body) {
-    if (!error && response.statusCode == 200) {
-      callback(error, JSON.parse(body)['access_token']);
-    } else {
-      callback(error);
-    }
-  });
-}
-
-function connect(access_token) {
-  const ws = new WebSocket("wss://message.typetalk.com/api/v1/streaming", {
+async function connect() {
+  let access_token = await issue_access_token()
+  let ws = new WebSocket("wss://message.typetalk.com/api/v1/streaming", {
     headers: {
       'Authorization': 'Bearer ' + access_token
     }
   });
-
   ws.on('open', function () {
-    // console.log('connected streaming server');
-  }).on('close', function () {
-    // console.log('disconnected streaming server');
-    connect(access_token);
+    console.log('connected streaming server');
+  }).on('close', async function () {
+    console.log('disconnected streaming server');
+    await connect();
   }).on('message', async function (data, flags) {
     data = JSON.parse(data)
+    console.log(data)
     if (data.type == "likeMessage") {
       const topic = data.data.topic.name;
       const sender = data.data.like.account;
@@ -80,15 +58,28 @@ function connect(access_token) {
         await job.save();
       }
     }
-  });
+  })
 }
 
-issue_access_token(function (error, token) {
-  if (error) {
-    console.log('Failed to get an access token.');
-    console.log(error);
-    process.exit(1);
+async function issue_access_token() {
+  const options = {
+    url: "https://typetalk.com/oauth2/access_token",
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded'
+    },
+    params: {
+      'client_id': client_id,
+      'client_secret': client_secret,
+      'grant_type': 'client_credentials'
+    }
   }
+  const response = await axios(options)
+  if (response.status == 200) {
+    const data =  response.data
+    return data.access_token
+  }
+}
 
-  connect(token);
-});
+connect().then((r)=>{
+})

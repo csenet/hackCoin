@@ -2,6 +2,10 @@ const mongoose = require('mongoose')
 const Schema = mongoose.Schema
 
 const UserSchema = new Schema({
+  index: {
+    type: Number,
+    require: true
+  },
   account: {
     type: JSON,
     required: true

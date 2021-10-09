@@ -1,5 +1,6 @@
 {
   "privateKey": "f8ecdf82c55df2fad204b78295506ae857c5c36c33076ef1b57ca7365c411546",
   "contract": "0xaf680e28e99da76ae40ddfa2a9c50b48762b6991",
-  "ropsten": "https://ropsten.infura.io/v3/b6f868b8813a4d5c95b85e61b4f445d8"
+  "ropsten": "https://ropsten.infura.io/v3/b6f868b8813a4d5c95b85e61b4f445d8",
+  "mnemonic": "remember naive stairs dose six decorate catalog banner gaze tiny into lady"
 }

@@ -1,5 +1,13 @@
-const mongoose = require("mongoose"),
-  User = mongoose.model('Users')
+const mongoose = require('mongoose')
+mongoose.connect(`mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASSWORD}@${process.env.DB_HOST}?retryWrites=true&w=majority`)
+require('../models/user')
+const User = mongoose.model('Users')
+
+const wallet = require("./accountController");
+
+exports.initialize = async function () {
+  await wallet.initialize()
+}
 
 exports.getUserAddress = async function (id) {
   const userData = await User.findOne({'account.id': id})
@@ -18,12 +26,40 @@ exports.updateAddress = async function (id, address, account) {
       },
       {new: true}
     )
-  } else {
-    // 新規作成
-    const userInfo = new User({
-      account: account,
-      address: address
-    })
-    await userInfo.save()
   }
 }
+
+exports.getNextIndex = async function () {
+  const lastDoc = await User.findOne({}, {}, {
+    sort: {
+      'index': -1
+    }
+  });
+  return lastDoc ? lastDoc.index + 1 : 0;
+}
+
+let INDEX = 0;
+
+exports.createUser = async function (id, account) {
+  // const lastDoc = await User.findOne({}, [], {
+  //   sort: {
+  //     'index': 1
+  //   }
+  // });
+  // const index = lastDoc ? lastDoc.index + 1 : 0;
+  const index = INDEX;
+  INDEX++;
+  const address = wallet.getAccountByIndex(index)
+  console.log(address)
+  // 新規作成
+  const userInfo = new User({
+    id: id,
+    index: index,
+    account: account,
+    address: address
+  })
+  await userInfo.save()
+}
+
+this.getNextIndex().then(res => console.log(res))
+

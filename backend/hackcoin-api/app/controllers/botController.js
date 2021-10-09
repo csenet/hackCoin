@@ -19,6 +19,9 @@ exports.webhook = async (req, res) => {
   } else if (command.match(/^check/)) {
     // 現在の残高を確認します
     message = await getMyBalance(data)
+  } else if (command.match(/^info/)){
+    // Addressを返します
+    message = await getMyAddress(data)
   }
 
   const reply = message ? {"message": message, "replyTo": postId} : {}
@@ -54,4 +57,14 @@ async function getMyBalance(data) {
   }
   const balance = await web3Controller.getBalance(address);
   return `あなたのHack Coinの残高は...\n${balance} HACK!`
+}
+
+
+async function getMyAddress(data) {
+  const id = data.post.account.id;
+  const address = await db.getUserAddress(id)
+  if (!address) {
+    return "Addressが登録されていません"
+  }
+  return `あなたのAddressは...\n${address} HACK!`
 }

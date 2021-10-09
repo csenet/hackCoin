@@ -6,6 +6,7 @@ web3 = new Web3Controller(provider);
 const abi = require("./abi.json")
 
 const account = web3.eth.accounts.privateKeyToAccount(settings.privateKey)
+
 console.log(account.address)
 const contract = new web3.eth.Contract(abi, settings.contract, {
   from: account.address,
