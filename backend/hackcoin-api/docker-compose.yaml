@@ -27,7 +27,7 @@ services:
       - "./caddy/Caddyfile:/etc/caddy/Caddyfile"
       - "caddy_data:/caddy_data"
     environment:
-      HOSTNAME: localhost
+      HOSTNAME: os3-359-12725.vs.sakura.ne.jp
     depends_on:
       - app
     ports:

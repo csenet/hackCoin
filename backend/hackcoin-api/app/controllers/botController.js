@@ -19,12 +19,12 @@ exports.webhook = async (req, res) => {
   } else if (command.match(/^check/)) {
     // 現在の残高を確認します
     message = await getMyBalance(data)
-  } else if (command.match(/^info/)){
+  } else if (command.match(/^info/)) {
     // Addressを返します
     message = await getMyAddress(data)
   }
 
-  const reply = message ? {"message": message, "replyTo": postId} : {}
+  const reply = message ? { "message": message, "replyTo": postId } : {}
   res.json(reply)
 }
 
@@ -66,5 +66,5 @@ async function getMyAddress(data) {
   if (!address) {
     return "Addressが登録されていません"
   }
-  return `あなたのAddressは...\n${address} HACK!`
+  return `あなたのAddressは...\n${address}`
 }

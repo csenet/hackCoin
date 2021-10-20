@@ -10,7 +10,7 @@ const account = web3.eth.accounts.privateKeyToAccount(settings.privateKey)
 console.log(account.address)
 const contract = new web3.eth.Contract(abi, settings.contract, {
   from: account.address,
-  gasPrice: 1000000
+  gasPrice: 80000000
 })
 
 exports.getBalance = async function (address) {
@@ -36,7 +36,7 @@ exports.sendToken = async function (to, value) {
     data: data
   }
   // Sign the transaction
-  const tx = new Tx(txObject, {'chain': 'ropsten'});
+  const tx = new Tx(txObject, { 'chain': 'ropsten' });
   tx.sign(Buffer.from(settings.privateKey, 'hex'));
 
   const serializedTx = tx.serialize();

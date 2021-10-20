@@ -35,7 +35,6 @@ async function connect() {
     await connect();
   }).on('message', async function (data, flags) {
     data = JSON.parse(data)
-    console.log(data)
     if (data.type == "likeMessage") {
       const topic = data.data.topic.name;
       const sender = data.data.like.account;
@@ -45,16 +44,16 @@ async function connect() {
       if (senderAddress) {
         // いいねを送った人
         // アドレスが登録されている場合にTokenを送金
-        console.log(senderAddress)
-        const job = queue.createJob({to: senderAddress, value: process.env.VALANCE});
+        console.log(`senderAddress:${senderAddress}`)
+        const job = queue.createJob({ to: senderAddress, value: process.env.VALANCE });
         await job.save();
       }
       const receiverAddress = await db.getUserAddress(receiver.id);
       if (receiverAddress) {
         // いいねをした人
         // アドレスが登録されている場合にTokenを送金
-        console.log(receiverAddress)
-        const job = queue.createJob({to: receiverAddress, value: process.env.VALANCE});
+        console.log(`receiverAddress:${receiverAddress}`)
+        const job = queue.createJob({ to: receiverAddress, value: process.env.VALANCE });
         await job.save();
       }
     }
@@ -76,10 +75,10 @@ async function issue_access_token() {
   }
   const response = await axios(options)
   if (response.status == 200) {
-    const data =  response.data
+    const data = response.data
     return data.access_token
   }
 }
 
-connect().then((r)=>{
+connect().then((r) => {
 })
