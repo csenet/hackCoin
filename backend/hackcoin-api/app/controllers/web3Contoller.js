@@ -9,8 +9,7 @@ const account = web3.eth.accounts.privateKeyToAccount(settings.privateKey)
 
 console.log(account.address)
 const contract = new web3.eth.Contract(abi, settings.contract, {
-  from: account.address,
-  gasPrice: 80000000
+  from: account.address
 })
 
 exports.getBalance = async function (address) {

@@ -1,8 +1,8 @@
-var axios = require('axios');
-var FormData = require('form-data');
-var data = new FormData();
+const axios = require('axios');
+const FormData = require('form-data');
+const data = new FormData();
 
-var config = {
+const config = {
   method: 'get',
   url: 'https://typetalk.com/api/v1/spaces/ttaxgMT8FO/teams/QG9e3T',
   headers: {

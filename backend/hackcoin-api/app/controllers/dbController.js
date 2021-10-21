@@ -10,21 +10,21 @@ exports.initialize = async function () {
 }
 
 exports.getUserAddress = async function (id) {
-  const userData = await User.findOne({ 'account.id': id })
+  const userData = await User.findOne({'account.id': id})
   if (!userData) return null
   return userData.address
 }
 
 exports.updateAddress = async function (id, address, account) {
-  if (await User.findOne({ 'account.id': id })) {
+  if (await User.findOne({'account.id': id})) {
     // 更新
     await User.findOneAndUpdate(
-      { 'account.id': id },
+      {'account.id': id},
       {
         account: account,
         address: address
       },
-      { new: true }
+      {new: true}
     )
   }
 }
@@ -61,3 +61,7 @@ exports.createUser = async function (id, account) {
   await userInfo.save()
 }
 
+exports.getAllUser = async function () {
+  const data = User.find({})
+  return data
+}
