@@ -18,6 +18,7 @@ services:
       TYPETALK_CLIENT_ID: nb0Op8DgmHj6cA3dKl0R0loC3W0rlskD
       TYPETALK_CLIENT_SECRET: pyaOD5EhA73WIFXsOhfmFuxO3Ewxl7viqqkZSipNXZpliL2NWcwdQtFJgyGRg2L4
       VALANCE: 1
+    restart: always
     depends_on:
       - redis
 
