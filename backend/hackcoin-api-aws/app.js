@@ -1,3 +1,13 @@
+require('dotenv').config();
+
+// Redis
+require('./services/redisWorker')
+
+// Websocket
+require('./services/typetalkWorker')
+
+
+
 const express = require('express')
 const app = express()
 const bodyParser = require('body-parser')

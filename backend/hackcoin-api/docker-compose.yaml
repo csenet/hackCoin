@@ -20,6 +20,7 @@ services:
       VALANCE: 1
     depends_on:
       - redis
+    tty: true
 
   caddy:
     image: caddy:latest

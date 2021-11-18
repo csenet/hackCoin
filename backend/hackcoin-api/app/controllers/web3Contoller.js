@@ -19,10 +19,10 @@ exports.getBalance = async function (address) {
   return balance
 }
 
-exports.sendToken = async function (to, value) {
+exports.sendToken = async function (from, to, value) {
 
   const data = contract.methods
-    .transfer(to, value).encodeABI();
+    .transferFrom(from, to, value).encodeABI();
 
   const txCount = await web3.eth.getTransactionCount(account.address);
   console.log(txCount)

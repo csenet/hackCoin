@@ -74,7 +74,7 @@
     "HackcoinAPILogGroup": {
       "Type": "AWS::Logs::LogGroup",
       "Properties": {
-        "LogGroupName": "/aws/lambda/hackcoin-api-dev-hackcoinAPI"
+        "LogGroupName": "/aws/lambda/hackcoin-api-aws-dev-hackcoinAPI"
       }
     },
     "IamRoleLambdaExecution": {
@@ -102,7 +102,7 @@
               "Fn::Join": [
                 "-",
                 [
-                  "hackcoin-api",
+                  "hackcoin-api-aws",
                   "dev",
                   "lambda"
                 ]
@@ -119,7 +119,7 @@
                   ],
                   "Resource": [
                     {
-                      "Fn::Sub": "arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/hackcoin-api-dev*:*"
+                      "Fn::Sub": "arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/hackcoin-api-aws-dev*:*"
                     }
                   ]
                 },
@@ -130,7 +130,7 @@
                   ],
                   "Resource": [
                     {
-                      "Fn::Sub": "arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/hackcoin-api-dev*:*:*"
+                      "Fn::Sub": "arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/hackcoin-api-aws-dev*:*:*"
                     }
                   ]
                 }
@@ -143,7 +143,7 @@
           "Fn::Join": [
             "-",
             [
-              "hackcoin-api",
+              "hackcoin-api-aws",
               "dev",
               {
                 "Ref": "AWS::Region"
@@ -154,6 +154,52 @@
         }
       }
     },
+    "EnterpriseLogAccessIamRole": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Principal": {
+                "AWS": "arn:aws:iam::802587217904:root"
+              },
+              "Action": "sts:AssumeRole",
+              "Condition": {
+                "StringEquals": {
+                  "sts:ExternalId": "ServerlessEnterprise-b6238b1f-df1a-4213-8390-51e0abd4a734"
+                }
+              }
+            }
+          ]
+        },
+        "Policies": [
+          {
+            "PolicyName": "LogFilterAccess",
+            "PolicyDocument": {
+              "Version": "2012-10-17",
+              "Statement": [
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "logs:FilterLogEvents"
+                  ],
+                  "Resource": [
+                    {
+                      "Fn::GetAtt": [
+                        "HackcoinAPILogGroup",
+                        "Arn"
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
     "HackcoinAPILambdaFunction": {
       "Type": "AWS::Lambda::Function",
       "Properties": {
@@ -161,11 +207,11 @@
           "S3Bucket": {
             "Ref": "ServerlessDeploymentBucket"
           },
-          "S3Key": "serverless/hackcoin-api/dev/1633280650065-2021-10-03T17:04:10.065Z/hackcoin-api.zip"
+          "S3Key": "serverless/hackcoin-api-aws/dev/1636906275269-2021-11-14T16:11:15.269Z/hackcoin-api-aws.zip"
         },
-        "Handler": "lambda.handler",
+        "Handler": "s_hackcoinAPI.handler",
         "Runtime": "nodejs14.x",
-        "FunctionName": "hackcoin-api-dev-hackcoinAPI",
+        "FunctionName": "hackcoin-api-aws-dev-hackcoinAPI",
         "MemorySize": 1024,
         "Timeout": 6,
         "Role": {
@@ -179,20 +225,20 @@
         "HackcoinAPILogGroup"
       ]
     },
-    "HackcoinAPILambdaVersionc0SlQAfPEpD3F5M4OfkAjWLwhTjp3Tqke3s3ezQxfk": {
+    "HackcoinAPILambdaVersionYieArOrHmwqhjAtpv28QN3A7y2gw4i1BeR6TZ6aDRg": {
       "Type": "AWS::Lambda::Version",
       "DeletionPolicy": "Retain",
       "Properties": {
         "FunctionName": {
           "Ref": "HackcoinAPILambdaFunction"
         },
-        "CodeSha256": "PSyOQ+KlaHUBybm7ws+pzoi9ecpDvH4phggBadjFDPU="
+        "CodeSha256": "WnlB1Vmb26HhuOJWf/UYyC26/3N20gAn3DTJ+Bf+0RI="
       }
     },
     "ApiGatewayRestApi": {
       "Type": "AWS::ApiGateway::RestApi",
       "Properties": {
-        "Name": "dev-hackcoin-api",
+        "Name": "dev-hackcoin-api-aws",
         "EndpointConfiguration": {
           "Types": [
             "EDGE"
@@ -311,7 +357,7 @@
         "HackcoinAPILambdaPermissionApiGateway"
       ]
     },
-    "ApiGatewayDeployment1633280645178": {
+    "ApiGatewayDeployment1636906263116": {
       "Type": "AWS::ApiGateway::Deployment",
       "Properties": {
         "RestApiId": {
@@ -360,6 +406,153 @@
           ]
         }
       }
+    },
+    "ApiGatewayLogGroup": {
+      "Type": "AWS::Logs::LogGroup",
+      "Properties": {
+        "LogGroupName": "/aws/api-gateway/hackcoin-api-aws-dev"
+      }
+    },
+    "CustomApiGatewayAccountCloudWatchRole": {
+      "Type": "Custom::ApiGatewayAccountRole",
+      "Version": 1,
+      "Properties": {
+        "ServiceToken": {
+          "Fn::GetAtt": [
+            "CustomDashresourceDashapigwDashcwDashroleLambdaFunction",
+            "Arn"
+          ]
+        }
+      }
+    },
+    "IamRoleCustomResourcesLambdaExecution": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Principal": {
+                "Service": [
+                  "lambda.amazonaws.com"
+                ]
+              },
+              "Action": [
+                "sts:AssumeRole"
+              ]
+            }
+          ]
+        },
+        "Policies": [
+          {
+            "PolicyName": {
+              "Fn::Join": [
+                "-",
+                [
+                  "dev",
+                  "hackcoin-api-aws",
+                  "custom-resources-lambda"
+                ]
+              ]
+            },
+            "PolicyDocument": {
+              "Version": "2012-10-17",
+              "Statement": [
+                {
+                  "Effect": "Allow",
+                  "Resource": {
+                    "Fn::Join": [
+                      ":",
+                      [
+                        "arn",
+                        {
+                          "Ref": "AWS::Partition"
+                        },
+                        "iam:",
+                        {
+                          "Ref": "AWS::AccountId"
+                        },
+                        "role/*"
+                      ]
+                    ]
+                  },
+                  "Action": [
+                    "iam:AttachRolePolicy",
+                    "iam:CreateRole",
+                    "iam:ListAttachedRolePolicies",
+                    "iam:PassRole"
+                  ]
+                },
+                {
+                  "Effect": "Allow",
+                  "Resource": {
+                    "Fn::Join": [
+                      ":",
+                      [
+                        "arn",
+                        {
+                          "Ref": "AWS::Partition"
+                        },
+                        "apigateway:*::/account"
+                      ]
+                    ]
+                  },
+                  "Action": [
+                    "apigateway:GET",
+                    "apigateway:PATCH"
+                  ]
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    "CustomDashresourceDashapigwDashcwDashroleLambdaFunction": {
+      "Type": "AWS::Lambda::Function",
+      "Properties": {
+        "Code": {
+          "S3Bucket": {
+            "Ref": "ServerlessDeploymentBucket"
+          },
+          "S3Key": "serverless/hackcoin-api-aws/dev/1636906275269-2021-11-14T16:11:15.269Z/custom-resources.zip"
+        },
+        "FunctionName": "hackcoin-api-aws-dev-custom-resource-apigw-cw-role",
+        "Handler": "apiGatewayCloudWatchRole/handler.handler",
+        "MemorySize": 1024,
+        "Runtime": "nodejs12.x",
+        "Timeout": 180,
+        "Role": {
+          "Fn::GetAtt": [
+            "IamRoleCustomResourcesLambdaExecution",
+            "Arn"
+          ]
+        }
+      },
+      "DependsOn": [
+        "IamRoleCustomResourcesLambdaExecution"
+      ]
+    },
+    "CWLSubFilterHackcoinAPILogGroupApNortheast1": {
+      "Type": "AWS::Logs::SubscriptionFilter",
+      "Properties": {
+        "DestinationArn": "arn:aws:logs:ap-northeast-1:802587217904:destination:b6238b1f-df1a-4213-8390-51e0abd4a734#cnLQj5CnxyD3ZQYV7S#hackcoin-api-aws#dev",
+        "FilterPattern": "?\"REPORT RequestId: \" ?\"SERVERLESS_ENTERPRISE\"",
+        "LogGroupName": {
+          "Ref": "HackcoinAPILogGroup"
+        }
+      }
+    },
+    "CWLSubFilterApiGatewayLogGroupApNortheast1": {
+      "Type": "AWS::Logs::SubscriptionFilter",
+      "Properties": {
+        "DestinationArn": "arn:aws:logs:ap-northeast-1:802587217904:destination:b6238b1f-df1a-4213-8390-51e0abd4a734#cnLQj5CnxyD3ZQYV7S#hackcoin-api-aws#dev",
+        "FilterPattern": "\"SLS_ACCESS_LOG\"",
+        "LogGroupName": {
+          "Ref": "ApiGatewayLogGroup"
+        }
+      }
     }
   },
   "Outputs": {
@@ -368,16 +561,27 @@
         "Ref": "ServerlessDeploymentBucket"
       },
       "Export": {
-        "Name": "sls-hackcoin-api-dev-ServerlessDeploymentBucketName"
+        "Name": "sls-hackcoin-api-aws-dev-ServerlessDeploymentBucketName"
+      }
+    },
+    "EnterpriseLogAccessIamRole": {
+      "Value": {
+        "Fn::GetAtt": [
+          "EnterpriseLogAccessIamRole",
+          "Arn"
+        ]
+      },
+      "Export": {
+        "Name": "sls-hackcoin-api-aws-dev-EnterpriseLogAccessIamRole"
       }
     },
     "HackcoinAPILambdaFunctionQualifiedArn": {
       "Description": "Current Lambda function version",
       "Value": {
-        "Ref": "HackcoinAPILambdaVersionc0SlQAfPEpD3F5M4OfkAjWLwhTjp3Tqke3s3ezQxfk"
+        "Ref": "HackcoinAPILambdaVersionYieArOrHmwqhjAtpv28QN3A7y2gw4i1BeR6TZ6aDRg"
       },
       "Export": {
-        "Name": "sls-hackcoin-api-dev-HackcoinAPILambdaFunctionQualifiedArn"
+        "Name": "sls-hackcoin-api-aws-dev-HackcoinAPILambdaFunctionQualifiedArn"
       }
     },
     "ServiceEndpoint": {
@@ -403,7 +607,7 @@
         ]
       },
       "Export": {
-        "Name": "sls-hackcoin-api-dev-ServiceEndpoint"
+        "Name": "sls-hackcoin-api-aws-dev-ServiceEndpoint"
       }
     }
   }

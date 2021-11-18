@@ -15,6 +15,12 @@ exports.getUserAddress = async function (id) {
   return userData.address
 }
 
+exports.getUserAddressByName = async function (name) {
+  const userData = await User.findOne({'account.name': name})
+  if (!userData) return null
+  return userData.address
+}
+
 exports.updateAddress = async function (id, address, account) {
   if (await User.findOne({'account.id': id})) {
     // 更新

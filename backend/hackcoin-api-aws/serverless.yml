@@ -1,3 +1,5 @@
+org: kou3141
+app: hackcoin-api-aws
 service: hackcoin-api-aws
 
 provider:
