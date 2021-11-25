@@ -29,7 +29,7 @@ router.get('/work', async (req, res) => {
 })
 
 router.get('/test', async (req, res) => {
-  res.json(await Web3.sendToken(settings.address,"0x523255e13aDB9F02B148B5C79F9C77A5f02494E8", 30))
+  res.json(await Web3.sendToken(settings.address, "0x523255e13aDB9F02B148B5C79F9C77A5f02494E8", 30))
 })
 
 router.get('/getBalance/:address', async (req, res) => {
@@ -38,14 +38,15 @@ router.get('/getBalance/:address', async (req, res) => {
   res.json({balance: balance})
 })
 
-router.get('/cron/ranking', async (req, res) => {
+router.get('/cron/ranking/:dev', async (req, res) => {
+  const isDev = req.params.dev === "dev" ? true : false;
   const apiKey = req.headers['x-api-key']
   if (apiKey != 'a9eb03b0-0d3a-4a40-9d09-0bdc6b560a14') {
     res.status(401).json({message: "Un authorised"})
     return
   }
-  showRanking()
-  res.json({message: "OK"})
+  showRanking(isDev)
+  res.json({message: isDev})
 })
 
 router.post('/token/send', Token.sendToken)

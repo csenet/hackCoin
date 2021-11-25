@@ -1,13 +1,13 @@
 const axios = require('axios');
 const qs = require('qs');
 
-exports.sendMessage = function (message) {
+exports.sendMessage = function (message,to) {
   const data = qs.stringify({
     'message': message
   });
   const config = {
     method: 'post',
-    url: 'https://typetalk.com/api/v1/topics/257278',
+    url: to,
     headers: {
       'X-TYPETALK-TOKEN': '5mEGtfq0sF6EZAkSBfEeAcj7n5F8HqDXPwbaC5TtM7BBFe9wTxRHhX6m9hApVLmw',
       'Content-Type': 'application/x-www-form-urlencoded'
