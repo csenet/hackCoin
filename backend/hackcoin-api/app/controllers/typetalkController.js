@@ -1,7 +1,7 @@
 const axios = require('axios');
 const qs = require('qs');
 
-exports.sendMessage = function (message,to) {
+exports.sendMessage = function (message,to,token) {
   const data = qs.stringify({
     'message': message
   });
@@ -9,7 +9,7 @@ exports.sendMessage = function (message,to) {
     method: 'post',
     url: to,
     headers: {
-      'X-TYPETALK-TOKEN': '5mEGtfq0sF6EZAkSBfEeAcj7n5F8HqDXPwbaC5TtM7BBFe9wTxRHhX6m9hApVLmw',
+      'X-TYPETALK-TOKEN': token,
       'Content-Type': 'application/x-www-form-urlencoded'
     },
     data: data
