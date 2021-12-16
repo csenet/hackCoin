@@ -28,7 +28,7 @@ services:
       - "./caddy/Caddyfile:/etc/caddy/Caddyfile"
       - "caddy_data:/caddy_data"
     environment:
-      HOSTNAME: os3-359-12725.vs.sakura.ne.jp
+      HOSTNAME: ec2-3-112-72-246.ap-northeast-1.compute.amazonaws.com
     depends_on:
       - app
     ports:

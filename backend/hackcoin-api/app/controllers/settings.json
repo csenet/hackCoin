@@ -1,7 +1,7 @@
 {
   "privateKey": "f8ecdf82c55df2fad204b78295506ae857c5c36c33076ef1b57ca7365c411546",
-  "contract": "0xaf680e28e99da76ae40ddfa2a9c50b48762b6991",
-  "ropsten": "https://ropsten.infura.io/v3/b6f868b8813a4d5c95b85e61b4f445d8",
+  "contract": "0xBb58998Ea67792f0CC4b8bA8d0B267841EfC916E",
+  "ropsten": "https://polygon-mumbai.infura.io/v3/b6f868b8813a4d5c95b85e61b4f445d8",
   "mnemonic": "remember naive stairs dose six decorate catalog banner gaze tiny into lady",
   "address": "0x9193ab3DCadc8F0B1A0ed19CB0395247f387222c"
 }
