@@ -55,7 +55,7 @@ if (typeof window !== 'undefined' && typeof window.ethereum !== 'undefined') {
   const httpEndpoint = 'http://localhost:8545'
   web3 = new Web3Contoller(new Web3Contoller.providers.HttpProvider(httpEndpoint))
 }
-1337
+
 
 const wait = (milliseconds) => {
   return new Promise((resolve) => setTimeout(resolve, milliseconds))
@@ -65,7 +65,7 @@ export default Vue.extend({
   layout: 'simple',
   data() {
     return {
-      tokenAddress: Settings.tokenContractAddress,
+      tokenAddress: "0xfde77337D08e2b04Dab7B161B650E16065e30779",
       walletAddress: "",
       contract: "",
       depositBalance: 0,
@@ -80,9 +80,10 @@ export default Vue.extend({
     }
   },
   async mounted() {
-    this.contract = new web3.eth.Contract(ABI, Settings.tokenContractAddress);
+    this.contract = new web3.eth.Contract(ABI, "0xfde77337D08e2b04Dab7B161B650E16065e30779");
     this.nowStatus = "Walletとの接続をしています";
     this.walletAddress = (await web3.eth.getAccounts())[0];
+    console.log(await web3.eth.getAccounts())
     this.nowStatus = "Walletと接続しました";
     this.tokenName = await this.contract.methods.name().call();
     this.tokenSymbol = await this.contract.methods.symbol().call();
@@ -117,27 +118,29 @@ export default Vue.extend({
           ],
         },
         domain: {
-          name: this.tokenName,
-          version: this.version,
-          chainId: this.chainId,
-          verifyingContract: Settings.tokenContractAddress,
-        },
+  name: 'TestToken',
+  version: '1',
+  chainId: 3,
+  verifyingContract: '0xfde77337D08e2b04Dab7B161B650E16065e30779'
+},
         primaryType: "TransferWithAuthorization",
         message: {
-          from: this.walletAddress,
-          to: this.toAddress,
-          value: this.amount.toString(10),
-          validAfter: 0,
-          validBefore: Math.floor(Date.now() / 1000) + 3600, // Valid for an hour
-          nonce: web3.utils.randomHex(32),
-        }
+  from: '0x579384a72870FDe2dD712adDeD2e6b4159edA875',
+  to: '0xD034E7A0470238DEb98D40D9C353B72676d0858a',
+  value: '10',
+  validAfter: 0,
+  validBefore: 1642701792,
+  nonce: '0x645dd0d07631bd511807ca9b4cd75589397de0cd821a0e14177d8e9274230bcc'
+}
       }
     },
     sendToken: async function () {
       const payload = await this.createPayload();
       console.log(payload);
       const from = this.walletAddress;
+      console.log(from);
       const params = [from, JSON.stringify(payload)];
+      console.log(from.address);
       const method = 'eth_signTypedData_v4';
       web3.currentProvider.sendAsync({
         id: this.chainId,

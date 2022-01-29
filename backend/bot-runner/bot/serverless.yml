@@ -1,0 +1,29 @@
+service: hackcoin-cron
+useDotenv: true
+provider:
+  name: aws
+  runtime: nodejs14.x
+  region: ap-northeast-1
+
+package:
+  exclude:
+    - .git/**
+    - test/**
+    - README.md
+
+functions:
+  serverlessTest:
+    handler: lambda.handler
+    environment:
+      DB_HOST: ${env:DB_HOST}
+      DB_USER: ${env:DB_USER}
+      DB_PASSWORD: ${env:DB_PASSWORD}
+      TYPETALK_CLIENT_ID: ${env:TYPETALK_CLIENT_ID}
+      TYPETALK_CLIENT_SECRET: ${env:TYPETALK_CLIENT_SECRET}
+    events:
+      - http:
+          path: /
+          method: ANY
+      - http:
+          path: /{proxy+}
+          method: ANY

@@ -32,7 +32,7 @@ exports.sendToken = async function (from, to, value) {
   const txCount = await web3.eth.getTransactionCount(account.address);
   console.log(txCount)
   const txObject = {
-    nonce: web3.utils.toHex(txCount),
+    // nonce: web3.utils.toHex(txCount),
     to: settings.contract,
     value: web3.utils.toHex(web3.utils.toWei('0', 'ether')),
     gasLimit: web3.utils.toHex(2100000),

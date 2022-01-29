@@ -59,13 +59,13 @@ export default Vue.extend({
 
   data() {
     return {
-      tokenAddress: Settings.tokenContractAddress,
+      tokenAddress: "0xfde77337D08e2b04Dab7B161B650E16065e30779",
       walletAddress: "",
       contract: "",
       depositBalance: 0,
       nowStatus: "",
       amount: 1,
-      toAddress: "0x9193ab3DCadc8F0B1A0ed19CB0395247f387222c",
+      toAddress: "0x46a4143F2778F0f80a36e83946F05f156b2793A7",
       tokenName: "",
       tokenSymbol: "",
       chainId: "",
@@ -73,7 +73,7 @@ export default Vue.extend({
     }
   },
   async created() {
-    this.contract = new web3.eth.Contract(ABI, Settings.tokenContractAddress);
+    this.contract = new web3.eth.Contract(ABI, "0xfde77337D08e2b04Dab7B161B650E16065e30779");
     this.nowStatus = "Walletとの接続をしています";
     this.walletAddress = await web3.eth.getCoinbase();
     this.nowStatus = "Walletと接続しました";
@@ -129,7 +129,7 @@ export default Vue.extend({
           name: this.tokenName,
           version: this.version,
           chainId: this.chainId,
-          verifyingContract: Settings.tokenContractAddress,
+          verifyingContract: "0xfde77337D08e2b04Dab7B161B650E16065e30779",
         },
         primaryType: "TransferWithAuthorization",
         message: {
@@ -183,7 +183,7 @@ export default Vue.extend({
       console.log("Before Balance:" + await this.getBalance())
 
       const tx = {
-        to: Settings.tokenContractAddress,
+        to: "0xfde77337D08e2b04Dab7B161B650E16065e30779",
         data: encodedData,
         gas: '100000',
         schedule: 'fast'
