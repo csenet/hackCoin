@@ -29,14 +29,14 @@ exports.sendToken = async function (from, to, value) {
   const data = contract.methods
     .transfer(to, value).encodeABI();
 
-  const txCount = await web3.eth.getTransactionCount(account.address);
+  const txCount = await web3.eth.getTransactionCount(account.address,'pending');
   console.log(txCount)
   const txObject = {
-    // nonce: web3.utils.toHex(txCount),
+    nonce: web3.utils.toHex(txCount),
     to: settings.contract,
     value: web3.utils.toHex(web3.utils.toWei('0', 'ether')),
-    gasLimit: web3.utils.toHex(2100000),
-    gasPrice: web3.utils.toHex(web3.utils.toWei('6', 'gwei')),
+    gasLimit: web3.utils.toHex(500000),
+    gasPrice: web3.utils.toHex(80000000000),
     data: data,
     chainId: web3.utils.toHex(80001),
     from: account.address

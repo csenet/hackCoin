@@ -29,7 +29,7 @@ router.get('/work', async (req, res) => {
 })
 
 router.get('/test', async (req, res) => {
-  res.json(await Web3.sendToken(settings.address, "0x523255e13aDB9F02B148B5C79F9C77A5f02494E8", 30))
+  res.json(await Web3.sendToken(settings.address, "0xEF0Dd4aeE97cEBd8A1651D0bd964EfE1E1aA596c", 10))
 })
 
 router.get('/getBalance/:address', async (req, res) => {
